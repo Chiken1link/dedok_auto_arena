@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Arena Bot</title>
+</head>
+<body>
+    <h1>Arena Bot</h1>
+    <label for="token">Токен:</label>
+    <input type="text" id="token" placeholder="Введите токен"><br>
+    <button onclick="startBot()">Старт</button>
+
+    <div id="output"></div>
+
+    <script>
+        function startBot() {
+            const token = document.getElementById("token").value;
+            let money = 0;
+            let points = 0;
+            let clan_points = 0;
+            let mmr = 0;
+            const payload = '{"type":"go on arena"}';
+            const chat_id = "-220449804";
+
+            function razdel(data) {
+                const values = data.split(", ");
+                money = parseInt(values[0].slice(0, -1)) + money;
+                points = parseInt(values[1].slice(0, -1)) + points;
+                mmr = parseInt(values[2].substring(1)) + mmr;
+                clan_points = parseInt(values[3].slice(0, -2)) + clan_points;
+            }
+
+            function get_last_message() {
+                const url = `https://api.vk.com/method/messages.getHistory?access_token=${token}&peer_id=${chat_id}&count=1&v=5.131`;
+                fetch(url)
+                    .then(response => response.json())
+                    .then(response_json => {
+                        if (response_json.error) {
+                            console.error(`Ошибка при получении последнего сообщения: ${response_json.error.error_msg}`);
+                        } else {
+                            const message = response_json.response.items[0].text;
+                            handle_message(message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error(`Ошибка при получении последнего сообщения: ${error}`);
+                    });
+            }
+
+            function send_callback_button() {
+                const url = `https://api.vk.com/method/messages.send?access_token=${token}&peer_id=${chat_id}&message=гавнюк&payload=${payload}&random_id=0&v=5.131`;
+                fetch(url)
+                    .then(response => response.json())
+                    .then(response_json => {
+                        if (response_json.error) {
+                            console.error(`Ошибка при нажатии кнопки: ${response_json.error.error_msg}`);
+                        }
+                    })
+                    .catch(error => {
+                        console.error(`Ошибка при нажатии кнопки: ${error}`);
+                    });
+            }
+
+            function handle_message(message) {
+                if (message.indexOf('🤡ты проиграл') === 0) {
+                    console.log('Писец проигрыш((((');
+                } else if(message.indexOf('🤑ты выйграл') === 0) {
+                    razdel(message.substring(12));
+                    console.log(`Ты победил! Общая прибыль за автоарену ${money}🪙 и ${clan_points}🎖️ клановых очков`);
+                }
+            }
+
+            console.log('Дедок на арене!!!');
+            setInterval(() => {
+                send_callback_button();
+                get_last_message();
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
